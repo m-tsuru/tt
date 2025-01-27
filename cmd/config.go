@@ -14,32 +14,37 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Get and Set repository or global options of tt",
 	Long:  `Get and Set repository or global options of tt`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		var err error
+		var path string
 		if global == true {
-			if edit == true {
-				err, confPath := lib.GetGlobalConfigPath(nil)
+			err, path = lib.GetGlobalConfigPath(nil)
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+			}
+		} else {
+			path = "a"
+		}
+		if edit == true {
+			lib.EditGlobalConfig(path)
+		} else {
+			if len(args) == 1 {
+				err, res := lib.GetConfig(args[0], path)
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
 				}
-				lib.EditGlobalConfig(confPath)
-			} else {
-				if len(args) == 1 {
-					err, res := lib.GetGlobalConfigFromRaw(args[0], nil)
-					if err != nil {
-						fmt.Printf("Error: %s\n", err)
-					}
-					fmt.Println(*res)
-				} else if len(args) == 2 {
-					err, res := lib.SetGlobalConfigFromRaw(args[0], &args[1], nil)
-					if err != nil {
-						fmt.Printf("Error: %s\n", err)
-					}
-					fmt.Println(*res)
+				fmt.Println(*res)
+			} else if len(args) == 2 {
+				err, res := lib.SetConfig(args[0], &args[1], path)
+				if err != nil {
+					fmt.Printf("Error: %s\n", err)
 				}
+				fmt.Println(*res)
+			} else {
+				err := "Wrong Arguments."
+				fmt.Printf("Error: %s\n", err)
 			}
 		}
-		return err
 	},
 }
 
