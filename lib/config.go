@@ -51,7 +51,7 @@ func GetGlobalConfigPath(userArg *string) (error, string) {
 
 	_, err := os.Stat(settingConfPath)
 	if os.IsNotExist(err) {
-		println("NO FILE")
+		println("info: Global Config is not found. Create New Configuration File.")
 		err = nil
 		_, err := os.Stat(homeDir + "/.tt")
 		if os.IsNotExist(err) {
@@ -99,7 +99,7 @@ func GetGlobalConfig(path *string) (error, *Config) {
 	return nil, &config
 }
 
-func GetGlobalConfigFromRaw(key string, path *string) (error, *string) {
+func GetConfig(key string, path string) (error, *string) {
 	parts := strings.Split(key, ".")
 	if len(parts) == 1 {
 		err := fmt.Errorf("key does not contain a section: %s", parts[0])
@@ -108,16 +108,15 @@ func GetGlobalConfigFromRaw(key string, path *string) (error, *string) {
 		err := fmt.Errorf("key is not valid.")
 		return err, nil
 	}
-	err, globalConfPath := GetGlobalConfigPath(path)
+	raw, err := ini.Load(path)
 	if err != nil {
 		return err, nil
 	}
-	raw, err := ini.Load(globalConfPath)
 	res := ptr(raw.Section(parts[0]).Key(parts[1]).String())
 	return nil, res
 }
 
-func SetGlobalConfigFromRaw(key string, value *string, path *string) (error, *string) {
+func SetConfig(key string, value *string, path string) (error, *string) {
 	parts := strings.Split(key, ".")
 	if len(parts) == 1 {
 		err := fmt.Errorf("key does not contain a section: %s", parts[0])
@@ -126,13 +125,9 @@ func SetGlobalConfigFromRaw(key string, value *string, path *string) (error, *st
 		err := fmt.Errorf("key is not valid.")
 		return err, nil
 	}
-	err, globalConfPath := GetGlobalConfigPath(path)
-	if err != nil {
-		return err, nil
-	}
-	raw, err := ini.Load(globalConfPath)
+	raw, err := ini.Load(path)
 	raw.Section(parts[0]).Key(parts[1]).SetValue(*value)
-	err = raw.SaveTo(globalConfPath)
+	err = raw.SaveTo(path)
 	if err != nil {
 		return err, nil
 	}
