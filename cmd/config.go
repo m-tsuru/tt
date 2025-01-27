@@ -3,6 +3,7 @@ package cmd
 import (
 	// "github.com/m-tsuru/tt/lib"
 	"fmt"
+	"os"
 
 	"github.com/m-tsuru/tt/lib"
 	"github.com/spf13/cobra"
@@ -23,7 +24,20 @@ var configCmd = &cobra.Command{
 				fmt.Printf("Error: %s\n", err)
 			}
 		} else {
-			path = "a"
+			curDir, err := os.Getwd()
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+			}
+			_, err = os.Stat(curDir + "/.tt")
+			if os.IsNotExist(err) {
+				os.Mkdir(curDir+"/.tt", 0755)
+			}
+			path = curDir + "/.tt/config"
+			f, err := os.Create(path)
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+			}
+			defer f.Close()
 		}
 		if edit == true {
 			lib.EditGlobalConfig(path)
